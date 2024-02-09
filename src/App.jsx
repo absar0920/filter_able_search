@@ -1,35 +1,127 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+import "./App.css"
+
+
+function SearchAbleProductTable({ products }) {
+  const [filterText, setFilterText] = useState("");
+  const [inStockOnly, setInStockOnly] = useState(false);
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <SearchBar
+        filterText={filterText}
+        inStockOnly={inStockOnly}
+        setFilterText={setFilterText}
+        setInStockOnly={setInStockOnly}
+      />
+      <ProductTable
+        filterText={filterText}
+        inStockOnly={inStockOnly}
+        products={products}
+      />
     </>
-  )
+  );
 }
 
-export default App
+function ProductCategoryRow({ category }) {
+  return (
+    <>
+      <tr>
+        <td colSpan={2} className="category">{category}</td>
+      </tr>
+    </>
+  );
+}
+
+function ProductRow({ product }) {
+  let name = product.stocked ? (
+    product.name
+  ) : (
+    <span style={{ color: "red" }}> {product.name}</span>
+  );
+  return (
+    <>
+      <tr>
+        <td>{name}</td>
+        <td>{product.price}</td>
+      </tr>
+    </>
+  );
+}
+
+function ProductTable({ products, filterText, inStockOnly }) {
+  let rows = [];
+  let last_category = null;
+
+  products.forEach((product) => {
+    if (product.name.toLowerCase().indexOf(filterText.toLowerCase()) === -1){
+      return
+    }
+    if (inStockOnly && !product.stocked){
+      return
+    }
+    if (product.category != last_category){
+      rows.push(<ProductCategoryRow key={product.category} category={product.category} />)
+    }
+    rows.push(<ProductRow key={product.name} product={product} />);
+    last_category = product.category
+  });
+
+  return (
+    <>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
+function SearchBar({ filterText, inStockOnly, setFilterText, setInStockOnly }) {
+  return (
+    <>
+      <label>
+        <input
+          type="text"
+          value={filterText}
+          placeholder="Enter your search here"
+          onChange={(e) => setFilterText(e.target.value)}
+        />
+      </label>
+      <br />
+      <label>
+        <input
+          type="checkbox"
+          checked={inStockOnly}
+          onChange={(e) => setInStockOnly(e.target.checked)}
+        />
+        Only Show products in stock
+      </label>
+    </>
+  );
+}
+
+const PRODUCTS = [
+  { category: "Fruits", price: "$1", stocked: true, name: "Apple" },
+  { category: "Fruits", price: "$1", stocked: true, name: "Dragonfruit" },
+  { category: "Fruits", price: "$2", stocked: false, name: "Passionfruit" },
+  { category: "Vegetables", price: "$2", stocked: true, name: "Spinach" },
+  { category: "Vegetables", price: "$4", stocked: false, name: "Pumpkin" },
+  { category: "Vegetables", price: "$1", stocked: true, name: "Peas" },
+];
+
+export default function App() {
+  return (
+    <div>
+      <SearchAbleProductTable products={PRODUCTS} />
+    </div>
+  );
+}
